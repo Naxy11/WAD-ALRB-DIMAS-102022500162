@@ -3,10 +3,18 @@
 namespace App\Http\Controllers;
 use App\Models\Dokter;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Gate;
 
-class DokterController extends Controller
+class DokterController implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('role:admin'),
+        ];
+    }
     public function index()
     {
         $data_dokter = Dokter::orderBy('id', 'desc')->get();
@@ -38,6 +46,8 @@ class DokterController extends Controller
 
     public function destroy($id)
     {
+        $dokter = Dokter::findOrFail($id);
+        Gate::authorize('delete', $dokter);
         Dokter::destroy($id);
         return redirect()->route('dokter.index');
     }
